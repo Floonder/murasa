@@ -19,3 +19,10 @@ pip install -e .
 For the usage example, please check [examples](examples) directory.
 
 For now, there's only an example for flood risk assessment. More examples will be added in the future.
+
+
+## Result Example
+
+You can see the Flood Susceptibility Analysis result here: https://floonder.chevalierlabsas.org/
+
+![Flood Susceptibility Analysis Result](./media/analysis-result.png)
