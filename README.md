@@ -1,8 +1,8 @@
 # Murasa
 
-Warning!! This in early development stage. I'm currently making this more agnostic. It was specifically made for Flood Risk Assessment for my final project and paper.
+Warning!! This is still in early development stage. I'm currently making this more agnostic. It was specifically made for Flood Risk Assessment for my final project and paper.
 
-An engine for Geospatial Risk Assessment. It is designed to be extensible via the plugin system.
+An engine for Geospatial Risk Assessment. It is designed to be extensible via the plugin system. This engine uses MCDA (Multi-Criteria Decision Analysis) method to perform the risk assessment. Specifically, WLC (Weighted Linear Combination).
 
 ## Installation
 
