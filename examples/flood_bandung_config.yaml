@@ -1,0 +1,73 @@
+project:
+  name: "Bandung Raya Flood Susceptibility Analysis (December)"
+  description: "Analyzes stuff"
+
+spatial:
+  target_crs: "EPSG:32748"
+  resolution: 10
+  filter_city: [ "KOTA BANDUNG", "KOTA CIMAHI", "KAB. BANDUNG", "KAB. BANDUNG BARAT" ]
+  study_area_key: "admin"
+
+paths:
+  dem: "../../data/DEMNAS/merged/new2026/filled_dem_tif.tif"
+  slope: "../../data/DEMNAS/merged/new2026/filled_slope_tif.tif"
+  twi: "../../data/DEMNAS/merged/new2026/twi.tif"
+  rainfall: "../../data/bmkg_rainfall_data/curah-hujan-desember-2025.geojson"
+  admin_dirs:
+    - "../../data/wilayah-administrasi/KAB. BANDUNG"
+    - "../../data/wilayah-administrasi/KAB. BANDUNG BARAT"
+    - "../../data/wilayah-administrasi/KOTA BANDUNG"
+    - "../../data/wilayah-administrasi/KOTA CIMAHI"
+  river: "../../data/river/SUNGAI_LN_25K.shp"
+  output_dir: "../output"
+
+weights:
+  rainfall: 0.15
+  elevation: 0.15
+  slope: 0.18
+  twi: 0.22
+  proximity: 0.10
+  land_use: 0.20
+
+parameters:
+  rainfall:
+    column_name: "gridcode"
+    value_mapping:
+      1: 10
+      2: 35
+      3: 75
+      4: 125
+      5: 175
+      6: 250
+      7: 350
+      8: 450
+      9: 600
+
+  land_use:
+    coefficients:
+      water: 1.0
+      settlement: 0.85
+      building: 0.90
+      road: 0.90
+      paddy: 0.70
+      plantation: 0.40
+      forest: 0.20
+      shrub: 0.35
+      default: 0.50
+    priorities:
+      water: 100
+      road: 90
+      building: 80
+      settlement: 70
+      paddy: 50
+      plantation: 40
+      shrub: 30
+      forest: 20
+      default: 0
+
+  proximity:
+    feature: "river"
+    max_distance: 500
+
+  exclusion:
+    features: [ "river", "reservoir" ]

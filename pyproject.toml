@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "murasa"
+version = "0.1.0"
+description = "Plugin-based geospatial risk engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "geopandas>=0.13",
+    "rasterio>=1.3",
+    "fiona>=1.9",
+    "scipy>=1.10",
+    "pyyaml>=6.0",
+    "rasterstats>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+]
+
+[project.scripts]
+murasa = "murasa.run_flood_analysis:main"
+
+[tool.setuptools]
+packages = [
+    "murasa",
+    "murasa.core",
+    "murasa.engine",
+    "murasa.plugins",
+    "murasa.plugins.loaders",
+    "murasa.presets",
+]
+
+[tool.setuptools.package-dir]
+murasa = "."
+"murasa.core" = "core"
+"murasa.engine" = "engine"
+"murasa.plugins" = "plugins"
+"murasa.plugins.loaders" = "plugins/loaders"
+"murasa.presets" = "presets"
+
+[tool.setuptools.package-data]
+murasa = ["config/*.yaml"]
+
