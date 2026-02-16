@@ -12,7 +12,7 @@ paths:
   dem: "../../data/DEMNAS/merged/new2026/filled_dem_tif.tif"
   slope: "../../data/DEMNAS/merged/new2026/filled_slope_tif.tif"
   twi: "../../data/DEMNAS/merged/new2026/twi.tif"
-  rainfall: "../../data/bmkg_rainfall_data/curah-hujan-desember-2025.geojson"
+  rainfall: "../../data/bmkg_rainfall_data/curah-hujan-oktober-2025.geojson"
   admin_dirs:
     - "../../data/wilayah-administrasi/KAB. BANDUNG"
     - "../../data/wilayah-administrasi/KAB. BANDUNG BARAT"
@@ -32,6 +32,8 @@ weights:
 parameters:
   rainfall:
     column_name: "gridcode"
+    year: 2025
+    month: 10
     value_mapping:
       1: 10
       2: 35

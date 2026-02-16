@@ -118,6 +118,13 @@ class VectorExplainabilityPlugin(PostProcessorPlugin):
                 return
 
             out_gdf = gpd.GeoDataFrame(results, crs=crs)
+
+            rainfall_params = config.plugin_parameters.get('rainfall', {}) if config else {}
+            if rainfall_params.get('year'):
+                out_gdf['year'] = rainfall_params['year']
+            if rainfall_params.get('month'):
+                out_gdf['month'] = rainfall_params['month']
+
             weights = config.weights if config else None
             self._enrich_factors(out_gdf, registry, transform, crs, weights)
             
