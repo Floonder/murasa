@@ -1,0 +1,18 @@
+[package]
+name = "murasa-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Risk engine orchestration for Murasa"
+
+[dependencies]
+murasa-core = { path = "../murasa-core" }
+ndarray = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+geo = { workspace = true }
+geo-types = { workspace = true }
+gdal = { workspace = true }

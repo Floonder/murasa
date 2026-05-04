@@ -1,0 +1,26 @@
+[package]
+name = "murasa-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Core types and traits for the Murasa geospatial risk engine"
+
+[dependencies]
+ndarray = { workspace = true }
+ndarray-stats = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+geo = { workspace = true }
+geozero = { workspace = true }
+geo-types = { workspace = true }
+gdal = { workspace = true }
+pathdiff = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"

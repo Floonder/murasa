@@ -1,0 +1,21 @@
+[package]
+name = "murasa-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "CLI for running Murasa geospatial risk analyses"
+
+[[bin]]
+name = "murasa"
+path = "src/main.rs"
+
+[dependencies]
+murasa-core = { path = "../murasa-core" }
+murasa-engine = { path = "../murasa-engine" }
+murasa-plugins = { path = "../murasa-plugins" }
+anyhow = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+log = { workspace = true }
+env_logger = { workspace = true }
+serde_yaml = { workspace = true }

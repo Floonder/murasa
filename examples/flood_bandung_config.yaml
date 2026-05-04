@@ -1,75 +1,39 @@
-project:
-  name: "Bandung Raya Flood Susceptibility Analysis (December)"
-  description: "Analyzes stuff"
+name: bandung_flood_example
+description: "Example flood susceptibility config for the Rust port"
+analysis_type: susceptibility
 
 spatial:
-  target_crs: "EPSG:32748"
-  resolution: 10
-  filter_city: [ "KOTA BANDUNG", "KOTA CIMAHI", "KAB. BANDUNG", "KAB. BANDUNG BARAT" ]
-  study_area_key: "admin"
+  target_crs: "EPSG:4326"
+  metric_crs: "EPSG:3857"
+  resolution: 10.0
+  study_area_key: admin
 
-paths:
-  dem: "../../data/DEMNAS/merged/new2026/filled_dem_tif.tif"
-  slope: "../../data/DEMNAS/merged/new2026/filled_slope_tif.tif"
-  twi: "../../data/DEMNAS/merged/new2026/twi.tif"
-  rainfall: "../../data/bmkg_rainfall_data/curah-hujan-oktober-2025.geojson"
-  admin_dirs:
-    - "../../data/wilayah-administrasi/KAB. BANDUNG"
-    - "../../data/wilayah-administrasi/KAB. BANDUNG BARAT"
-    - "../../data/wilayah-administrasi/KOTA BANDUNG"
-    - "../../data/wilayah-administrasi/KOTA CIMAHI"
-  river: "../../data/river/SUNGAI_LN_25K.shp"
-  output_dir: "../output"
+output:
+  dir: "./output/rust_example"
+  formats: ["geojson", "geopackage"]
+  generate_report: true
+
+classification:
+  method: quantile
+  num_classes: 5
+  class_names: ["Very Low", "Low", "Moderate", "High", "Very High"]
 
 weights:
-  rainfall: 0.15
-  elevation: 0.15
-  slope: 0.18
-  twi: 0.22
-  proximity: 0.10
-  land_use: 0.20
+  rainfall: 0.25
+  elevation: 0.20
+  slope: 0.15
+  twi: 0.15
+  proximity: 0.15
+  land_use: 0.10
 
-parameters:
-  rainfall:
-    column_name: "gridcode"
-    year: 2025
-    month: 10
-    value_mapping:
-      1: 10
-      2: 35
-      3: 75
-      4: 125
-      5: 175
-      6: 250
-      7: 350
-      8: 450
-      9: 600
+paths:
+  dem: "data/bandung/dem.tif"
+  slope: "data/bandung/slope.tif"
+  twi: "data/bandung/twi.tif"
+  rainfall: "data/bandung/rainfall.shp"
+  river: "data/bandung/river.shp"
+  land_use: "data/bandung/landuse.shp"
+  admin_dirs: ["data/bandung/admin"]
+  output_dir: "./output/rust_example"
 
-  land_use:
-    coefficients:
-      water: 1.0
-      settlement: 0.85
-      building: 0.90
-      road: 0.90
-      paddy: 0.70
-      plantation: 0.40
-      forest: 0.20
-      shrub: 0.35
-      default: 0.50
-    priorities:
-      water: 100
-      road: 90
-      building: 80
-      settlement: 70
-      paddy: 50
-      plantation: 40
-      shrub: 30
-      forest: 20
-      default: 0
-
-  proximity:
-    feature: "river"
-    max_distance: 500
-
-  exclusion:
-    features: [ "river", "reservoir" ]
+admin_filename: "ADMINISTRASIDESA_AR_25K.shp"

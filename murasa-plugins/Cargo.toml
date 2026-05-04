@@ -1,0 +1,19 @@
+[package]
+name = "murasa-plugins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Built-in parameter and loader plugins for Murasa"
+
+[dependencies]
+murasa-core = { path = "../murasa-core" }
+murasa-engine = { path = "../murasa-engine" }
+ndarray = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+geo = { workspace = true }
+geo-types = { workspace = true }
