@@ -36,3 +36,9 @@ class AdminBoundariesLoader(DataLoaderPlugin):
 
         log_success(f"Loaded administrative boundaries: {len(gdf)} features")
         return self.loaded_sources
+
+
+def load_admin_boundaries(admin_dirs, target_crs: str = "EPSG:4326"):
+    """Convenience helper to scan and load administrative boundary GeoDataFrame."""
+    return scan_filename(admin_dirs, "ADMINISTRASIDESA_AR_25K.shp", target_crs)
+

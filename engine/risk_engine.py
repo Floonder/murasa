@@ -135,6 +135,7 @@ class RiskEngine:
 
         self.normalize_weights()
         self.exclusion_mask = np.zeros(self.grid_shape, dtype=bool)
+        self.component_rasters = {}
 
         risk_components = []
 
@@ -159,6 +160,7 @@ class RiskEngine:
                     logger.info(f"      Added exclusion mask from {plugin.name}: {mask.sum()} pixels")
                 else:
                     component = np.nan_to_num(component, nan=0.0)
+                    self.component_rasters[plugin.name] = component
                     weighted = component * plugin.weight
                     risk_components.append(weighted)
 
@@ -186,6 +188,45 @@ class RiskEngine:
         logger.info(f"Mean: {np.nanmean(self.risk_raster):.3f}")
 
         return self.risk_raster
+
+    def calculate_risk_with_uncertainty(
+        self,
+        n_simulations: int = 100,
+        concentration: float = 25.0,
+        random_state: int = 42,
+    ):
+        """
+        Execute Monte Carlo MCDA criteria weight perturbation analysis.
+
+        Propagates uncertainty in expert/decision weights into the composite spatial risk surface.
+
+        Args:
+            n_simulations: Number of Monte Carlo draws (default 100).
+            concentration: Dirichlet concentration parameter (lower = wider uncertainty).
+            random_state: Random seed for reproducibility.
+
+        Returns:
+            UncertaintyResult containing mean risk, standard deviation (uncertainty map),
+            coefficient of variation, and 90% confidence envelope percentiles.
+        """
+        from murasa.plugins.uncertainty import compute_mcda_uncertainty
+
+        if self.risk_raster is None or not hasattr(self, 'component_rasters') or not self.component_rasters:
+            self.calculate_risk()
+
+        weights = {p.name: p.weight for p in self.parameters if not p.is_exclusion}
+        rasters = {k: self.component_rasters[k] for k in weights if k in self.component_rasters}
+
+        uncertainty_res = compute_mcda_uncertainty(
+            component_rasters=rasters,
+            weights=weights,
+            n_simulations=n_simulations,
+            concentration=concentration,
+            exclusion_mask=self.exclusion_mask,
+            random_state=random_state,
+        )
+        return uncertainty_res
+
 
     def export_raster(self, output_path: Path) -> None:
         if self.risk_raster is None:

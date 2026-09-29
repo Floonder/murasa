@@ -4,10 +4,13 @@ import numpy as np
 
 from .risk_engine import RiskEngine
 from murasa.core.config import EngineConfig
-from murasa.core.data_source import DataSource, SourceType, load_admin_boundaries, load_rivers
-from murasa.plugins.risk_factors import (
+from murasa.core.data_source import DataSource, SourceType
+from murasa.plugins.loaders.admin_boundaries import load_admin_boundaries
+from murasa.plugins.loaders.rivers import load_rivers
+from murasa.plugins import (
     RainfallPlugin, ElevationPlugin, SlopePlugin,
-    TWIPlugin, ProximityPlugin, LandUsePlugin
+    TWIPlugin, SPIPlugin, STIPlugin, TPIPlugin,
+    ProximityPlugin, LandUsePlugin
 )
 from murasa.core.logger import logger, log_section
 

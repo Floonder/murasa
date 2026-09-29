@@ -61,6 +61,22 @@ class RasterResampler(BaseResampler):
 
         resampling = self._get_resampling_method()
 
+        if source.path is None and source.data is not None:
+            if isinstance(source.data, np.ndarray) and source.data.shape == self.grid_shape:
+                return source.data.astype(np.float32)
+            src_transform = getattr(source, 'transform', self.transform)
+            src_crs = getattr(source, 'crs', self.crs)
+            reproject(
+                source=source.data.astype(np.float32),
+                destination=raster,
+                src_transform=src_transform,
+                src_crs=src_crs,
+                dst_transform=self.transform,
+                dst_crs=self.crs,
+                resampling=resampling
+            )
+            return raster
+
         with rasterio.open(source.path) as src:
             reproject(
                 source=rasterio.band(src, 1),
@@ -73,6 +89,7 @@ class RasterResampler(BaseResampler):
             )
 
         return raster
+
 
 
 class VectorResampler(BaseResampler):

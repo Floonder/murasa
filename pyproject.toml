@@ -37,7 +37,6 @@ packages = [
     "murasa.engine",
     "murasa.plugins",
     "murasa.plugins.loaders",
-    "murasa.presets",
 ]
 
 [tool.setuptools.package-dir]
@@ -46,7 +45,6 @@ murasa = "."
 "murasa.engine" = "engine"
 "murasa.plugins" = "plugins"
 "murasa.plugins.loaders" = "plugins/loaders"
-"murasa.presets" = "presets"
 
 [tool.setuptools.package-data]
 murasa = ["config/*.yaml"]
