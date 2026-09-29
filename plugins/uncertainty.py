@@ -45,17 +45,31 @@ def sample_dirichlet_weights(
 
     Args:
         base_weights: Normalized 1D array of criteria weights summing to 1.
-        n_samples: Number of Monte Carlo draws.
-        concentration: Scaling parameter alpha0 = concentration.
+        n_samples: Number of Monte Carlo draws (must be >= 1).
+        concentration: Scaling parameter alpha0 = concentration (must be > 0).
         random_state: Optional random seed.
 
     Returns:
         Array of shape (n_samples, len(base_weights)).
     """
-    rng = np.random.default_rng(random_state)
-    base_weights = np.asarray(base_weights, dtype=float)
-    base_weights = base_weights / np.sum(base_weights)
+    if n_samples < 1:
+        raise ValueError("n_samples must be at least 1")
+    if concentration <= 0:
+        raise ValueError("concentration must be strictly positive")
 
+    base_weights = np.asarray(base_weights, dtype=float)
+    if base_weights.ndim != 1 or len(base_weights) == 0:
+        raise ValueError("base_weights must be a non-empty 1D array")
+    if np.any(base_weights < 0):
+        raise ValueError("base_weights must be non-negative")
+
+    total_weight = float(np.sum(base_weights))
+    if total_weight <= 0:
+        raise ValueError("Sum of base_weights must be positive")
+
+    base_weights = base_weights / total_weight
+
+    rng = np.random.default_rng(random_state)
     # Alpha parameters scaled by concentration
     alpha = np.maximum(base_weights * concentration, 0.01)
     samples = rng.dirichlet(alpha, size=n_samples)
@@ -78,16 +92,28 @@ def compute_mcda_uncertainty(
         weights: Dictionary mapping criterion name to base weight.
         n_simulations: Number of Monte Carlo simulations (default 100).
         concentration: Dirichlet concentration parameter (lower = wider uncertainty).
-        exclusion_mask: Boolean mask of excluded/water pixels (True = excluded).
+        exclusion_mask: Boolean mask of excluded/water pixels (True = excluded, set to NaN).
         random_state: Random seed for reproducibility.
 
     Returns:
         UncertaintyResult containing mean, std, CV, and percentile surfaces.
     """
-    names = list(weights.keys())
-    base_w = np.array([weights[k] for k in names], dtype=float)
-    base_w = base_w / np.sum(base_w)
+    if not component_rasters:
+        raise ValueError("component_rasters cannot be empty")
+    if not weights:
+        raise ValueError("weights cannot be empty")
 
+    missing = set(weights.keys()) - set(component_rasters.keys())
+    if missing:
+        raise KeyError(f"Missing raster components for weights: {missing}")
+
+    names = list(weights.keys())
+    first_arr = component_rasters[names[0]]
+    if first_arr.ndim != 2:
+        raise ValueError("component rasters must be 2D arrays")
+    h, w = first_arr.shape
+
+    base_w = np.array([weights[k] for k in names], dtype=float)
     sampled_w = sample_dirichlet_weights(
         base_w,
         n_samples=n_simulations,
@@ -96,20 +122,17 @@ def compute_mcda_uncertainty(
     )
 
     # Stack components into 3D array: (K, H, W)
-    first_arr = next(iter(component_rasters.values()))
-    h, w = first_arr.shape
     stack = np.empty((len(names), h, w), dtype=np.float32)
 
     for i, name in enumerate(names):
         arr = component_rasters[name]
+        if arr.shape != (h, w):
+            raise ValueError(f"Raster shape mismatch for '{name}': {arr.shape} vs {(h, w)}")
         stack[i] = np.nan_to_num(arr, nan=0.0).astype(np.float32)
 
     # Monte Carlo simulation runs: (n_simulations, H, W)
     # simulated_risk[m] = sum_k sampled_w[m, k] * stack[k]
     simulated_risks = np.tensordot(sampled_w, stack, axes=(1, 0))
-
-    if exclusion_mask is not None:
-        simulated_risks[:, exclusion_mask] = 0.0
 
     mean_risk = np.mean(simulated_risks, axis=0)
     std_risk = np.std(simulated_risks, axis=0)
@@ -117,6 +140,14 @@ def compute_mcda_uncertainty(
 
     p05 = np.percentile(simulated_risks, 5, axis=0)
     p95 = np.percentile(simulated_risks, 95, axis=0)
+
+    # Excluded pixels are masked with NaN to represent nodata consistently with RiskEngine
+    if exclusion_mask is not None:
+        mean_risk[exclusion_mask] = np.nan
+        std_risk[exclusion_mask] = np.nan
+        coef_variation[exclusion_mask] = np.nan
+        p05[exclusion_mask] = np.nan
+        p95[exclusion_mask] = np.nan
 
     return UncertaintyResult(
         mean_risk=mean_risk.astype(np.float32),

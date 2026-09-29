@@ -87,3 +87,56 @@ def test_risk_engine_calculate_risk_with_uncertainty():
     assert uncertainty.std_risk.shape == dem.shape
     assert np.all(np.isfinite(uncertainty.mean_risk))
     assert np.all(np.isfinite(uncertainty.std_risk))
+
+
+def test_mcda_uncertainty_exclusion_mask_and_convergence():
+    h, w = 10, 10
+    c1 = np.full((h, w), 0.7, dtype=np.float32)
+    c2 = np.full((h, w), 0.3, dtype=np.float32)
+
+    # 1. High concentration convergence test (Reviewer Attack Vector 3)
+    res_converged = compute_mcda_uncertainty(
+        component_rasters={"c1": c1, "c2": c2},
+        weights={"c1": 0.5, "c2": 0.5},
+        n_simulations=100,
+        concentration=10000.0,
+        random_state=42,
+    )
+    # With concentration 10000, std risk across weights should be near zero
+    assert np.all(res_converged.std_risk < 0.005)
+    assert np.allclose(res_converged.mean_risk, 0.5, atol=0.005)
+
+    # 2. Exclusion mask properly sets pixels to NaN (nodata consistency)
+    mask = np.zeros((h, w), dtype=bool)
+    mask[0:3, 0:3] = True
+    res_masked = compute_mcda_uncertainty(
+        component_rasters={"c1": c1, "c2": c2},
+        weights={"c1": 0.5, "c2": 0.5},
+        n_simulations=50,
+        exclusion_mask=mask,
+        random_state=42,
+    )
+    assert np.all(np.isnan(res_masked.mean_risk[0:3, 0:3]))
+    assert np.all(np.isnan(res_masked.std_risk[0:3, 0:3]))
+    assert np.all(np.isfinite(res_masked.mean_risk[4:, 4:]))
+
+
+def test_mcda_uncertainty_input_validation():
+    with pytest.raises(ValueError, match="n_samples"):
+        sample_dirichlet_weights(np.array([0.5, 0.5]), n_samples=0)
+
+    with pytest.raises(ValueError, match="concentration"):
+        sample_dirichlet_weights(np.array([0.5, 0.5]), concentration=-1.0)
+
+    with pytest.raises(ValueError, match="non-negative"):
+        sample_dirichlet_weights(np.array([-0.1, 0.6]))
+
+    with pytest.raises(ValueError, match="component_rasters cannot be empty"):
+        compute_mcda_uncertainty(component_rasters={}, weights={"a": 1.0})
+
+    with pytest.raises(KeyError, match="Missing raster components"):
+        compute_mcda_uncertainty(
+            component_rasters={"a": np.ones((5, 5))},
+            weights={"a": 0.5, "b": 0.5},
+        )
+

@@ -115,11 +115,28 @@ def calculate_tpi(dem: np.ndarray, cell_size: float = 1.0, radius_cells: int = 3
     Returns:
         TPI array with same shape as dem
     """
+    if radius_cells < 1:
+        raise ValueError("radius_cells must be at least 1")
+
     from scipy.ndimage import uniform_filter
 
     window_size = 2 * radius_cells + 1
-    mean_elevation = uniform_filter(dem.astype(float), size=window_size, mode='nearest')
-    tpi = dem - mean_elevation
+    dem_arr = np.asarray(dem, dtype=float)
+    nan_mask = np.isnan(dem_arr)
+
+    if np.any(nan_mask):
+        filled_dem = np.nan_to_num(dem_arr, nan=0.0)
+        valid_weights = (~nan_mask).astype(float)
+        sum_elevation = uniform_filter(filled_dem, size=window_size, mode='nearest')
+        valid_count = uniform_filter(valid_weights, size=window_size, mode='nearest')
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mean_elevation = sum_elevation / valid_count
+        mean_elevation[valid_count == 0] = np.nan
+        tpi = dem_arr - mean_elevation
+    else:
+        mean_elevation = uniform_filter(dem_arr, size=window_size, mode='nearest')
+        tpi = dem_arr - mean_elevation
+
     return tpi
 
 
@@ -139,15 +156,20 @@ def calculate_spi(
     Args:
         flow_accumulation: Flow accumulation or contributing area proxy
         slope_rad: Terrain slope in radians
-        cell_size: Resolution of grid cell
+        cell_size: Resolution of grid cell (must be > 0)
         log_scale: Return log(SPI + epsilon) for numerical stability and MCDA scaling
         epsilon: Small positive constant to prevent log(0)
 
     Returns:
         SPI array
     """
-    slope_clamped = np.maximum(slope_rad, 0.001)
-    # Specific catchment area As = flow_accumulation * cell_size
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    if epsilon <= 0:
+        raise ValueError("epsilon must be positive")
+
+    # Bound slope safely: [0.0001 rad (~0.006 deg), 1.55 rad (~88.8 deg)] to avoid tan(pi/2) singularity
+    slope_clamped = np.clip(slope_rad, 0.0001, np.radians(88.8))
     specific_catchment_area = np.maximum(flow_accumulation, 0.0) * cell_size
 
     spi = specific_catchment_area * np.tan(slope_clamped)
@@ -173,14 +195,19 @@ def calculate_sti(
     Args:
         flow_accumulation: Contributing flow accumulation
         slope_rad: Slope angle in radians
-        cell_size: Grid cell resolution
+        cell_size: Grid cell resolution (must be > 0)
         log_scale: Return log(STI + epsilon) for numerical stability and MCDA scaling
         epsilon: Small constant for stability
 
     Returns:
         STI array
     """
-    slope_clamped = np.maximum(slope_rad, 0.001)
+    if cell_size <= 0:
+        raise ValueError("cell_size must be positive")
+    if epsilon <= 0:
+        raise ValueError("epsilon must be positive")
+
+    slope_clamped = np.clip(slope_rad, 0.0001, np.radians(88.8))
     specific_catchment_area = np.maximum(flow_accumulation, 0.0) * cell_size
 
     term1 = np.power(np.maximum(specific_catchment_area / 22.13, 0.0), 0.6)

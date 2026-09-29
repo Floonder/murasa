@@ -217,12 +217,22 @@ class RiskEngine:
         weights = {p.name: p.weight for p in self.parameters if not p.is_exclusion}
         rasters = {k: self.component_rasters[k] for k in weights if k in self.component_rasters}
 
+        combined_mask = None
+        if self.exclusion_mask is not None and self.exclusion_mask.any():
+            combined_mask = self.exclusion_mask.copy()
+        if self.study_area_mask is not None:
+            outside_study = ~self.study_area_mask
+            if combined_mask is not None:
+                combined_mask = combined_mask | outside_study
+            else:
+                combined_mask = outside_study
+
         uncertainty_res = compute_mcda_uncertainty(
             component_rasters=rasters,
             weights=weights,
             n_simulations=n_simulations,
             concentration=concentration,
-            exclusion_mask=self.exclusion_mask,
+            exclusion_mask=combined_mask,
             random_state=random_state,
         )
         return uncertainty_res

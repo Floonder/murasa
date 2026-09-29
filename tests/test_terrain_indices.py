@@ -120,3 +120,41 @@ def test_sti_plugin_process(synthetic_valley_ridge_dem):
     assert result.shape == dem.shape
     assert np.all(np.isfinite(result))
     assert 0.0 <= np.min(result) <= np.max(result) <= 1.0
+
+
+def test_tpi_nan_resilience():
+    # 3x3 array with center pixel NaN
+    dem = np.array([[10.0, 12.0, 14.0], [11.0, np.nan, 15.0], [12.0, 13.0, 16.0]])
+    tpi = calculate_tpi(dem, radius_cells=1)
+
+    # Center pixel should remain NaN
+    assert np.isnan(tpi[1, 1])
+    # Corner and edge pixels should NOT be NaN
+    assert np.isfinite(tpi[0, 0])
+    assert np.isfinite(tpi[0, 2])
+    assert np.isfinite(tpi[2, 2])
+
+
+def test_terrain_parameter_validation():
+    dem = np.ones((5, 5))
+    with pytest.raises(ValueError, match="radius_cells"):
+        calculate_tpi(dem, radius_cells=0)
+
+    flow = np.ones((3, 3))
+    slope = np.ones((3, 3)) * 0.1
+    with pytest.raises(ValueError, match="cell_size"):
+        calculate_spi(flow, slope, cell_size=0.0)
+
+    with pytest.raises(ValueError, match="epsilon"):
+        calculate_spi(flow, slope, epsilon=-1.0)
+
+    with pytest.raises(ValueError, match="cell_size"):
+        calculate_sti(flow, slope, cell_size=-5.0)
+
+    with pytest.raises(ValueError, match="epsilon"):
+        calculate_sti(flow, slope, epsilon=0.0)
+
+    # Steep slope boundary condition does not blow up to inf
+    steep_slope = np.full((3, 3), np.radians(89.5))
+    spi_steep = calculate_spi(flow, steep_slope, log_scale=True)
+    assert np.all(np.isfinite(spi_steep))
