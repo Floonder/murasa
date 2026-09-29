@@ -8,7 +8,8 @@ from murasa.core.data_source import DataSource, SourceType
 from murasa.core.base import LoaderRegistry
 from murasa.plugins import (
     RainfallPlugin, ElevationPlugin, SlopePlugin,
-    TWIPlugin, ProximityPlugin, LandUsePlugin, WaterExclusionPlugin
+    TWIPlugin, SPIPlugin, STIPlugin, TPIPlugin,
+    ProximityPlugin, LandUsePlugin, WaterExclusionPlugin
 )
 from murasa.plugins.reporting import VectorExplainabilityPlugin
 from murasa.core.logger import logger, log_section, log_success, log_error
@@ -29,6 +30,19 @@ PLUGIN_MAP = {
     ),
     'twi': lambda weight, params: TWIPlugin(
         weight=weight
+    ),
+    'spi': lambda weight, params: SPIPlugin(
+        weight=weight,
+        inverse=params.get('invert', False)
+    ),
+    'sti': lambda weight, params: STIPlugin(
+        weight=weight,
+        inverse=params.get('invert', False)
+    ),
+    'tpi': lambda weight, params: TPIPlugin(
+        weight=weight,
+        inverse=params.get('invert', True),
+        radius_cells=params.get('radius_cells', 3)
     ),
     'land_use': lambda weight, params: LandUsePlugin(
         weight=weight,

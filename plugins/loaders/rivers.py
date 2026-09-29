@@ -37,3 +37,10 @@ class RiversLoader(DataLoaderPlugin):
 
         log_success(f"Loaded river networks: {len(gdf_rivers)} features")
         return self.loaded_sources
+
+
+def load_rivers(admin_dirs, target_crs: str = "EPSG:4326"):
+    """Convenience helper to scan and load river network GeoDataFrame."""
+    dirs = [Path(d) for d in admin_dirs]
+    return scan_all(dirs, RiversLoader.RIVER_PATTERNS, target_crs)
+

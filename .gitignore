@@ -7,3 +7,6 @@ murasa.egg-info
 presets
 examples/run_batch_monthly.py
 examples/upload_to_postgis.py
+.coverage
+.pytest_cache
+.venv
